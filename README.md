@@ -1,155 +1,124 @@
-# GamerTokens
+# Degen Gaming
 
-A simple smart contract for managing an ERC20-like token with additional functionality for minting, burning, and redeeming rewards.
+A smart contract for managing gaming tokens and rewards on the Ethereum blockchain.
 
 ## Description
 
-GamerTokens is a Solidity-based smart contract that enables the creation and management of an in-game token called "Degen" (DGN). This contract allows the owner to mint new tokens, users to transfer and burn tokens, check balances, and redeem tokens for predefined rewards. It is designed for use in gaming ecosystems where tokens can represent in-game currency or assets.
+Degen Gaming is a smart contract that allows the minting, transferring, and burning of Degen tokens (DGN). Users can also redeem their tokens for rewards such as NFTs. This contract includes functionality for checking balances and viewing redeemed items.
 
 ## Getting Started
 
 ### Installing
 
-To install and deploy the GamerTokens contract, follow these steps:
-
-1. **Download the Contract:**
-   - Clone the repository to your local machine:
-     ```
-     git clone https://github.com/your-username/GamerTokens.git
-     ```
-   - Navigate to the contract directory:
-     ```
-     cd GamerTokens
-     ```
-
-2. **Modify Contract (if necessary):**
-   - Open `GamerTokens.sol` and modify any parameters or initial values as needed.
+* Clone the repository from GitHub
+* Ensure you have a Solidity-compatible environment set up (e.g., Remix IDE, Truffle, Hardhat)
 
 ### Executing program
 
-To deploy and interact with the GamerTokens contract, follow these steps:
+* Compile the contract using your Solidity-compatible environment
+* Deploy the contract to your desired Ethereum network
 
-1. **Compile the Contract:**
-   - Use a Solidity compiler (e.g., Remix, Hardhat, Truffle) to compile `GamerTokens.sol`.
+Example commands:
+```solidity
+// To compile the contract
+solc Degen_Gaming.sol
 
-2. **Deploy the Contract:**
-   - Deploy the contract using a tool like Remix or via a script if using Hardhat or Truffle.
-   - Ensure you have a funded Ethereum account for deployment.
-
-3. **Interact with the Contract:**
-   - Use the deployed contract's address to interact with it via your preferred Ethereum wallet or integration tool.
-   
-   Example commands for interacting with the contract:
-   ```
-   // Mint tokens (only owner)
-   mintTokens(amount, recipient_address);
-
-   // Transfer tokens
-   transferTokens(amount, recipient_address);
-
-   // Burn tokens
-   burnTokens(amount);
-
-   // Check balance
-   checkBalance(address);
-
-   // Redeem reward
-   redeemReward(rewardId);
-   ```
+// To deploy the contract (using Remix or other IDE)
+```
 
 ## Help
 
-If you encounter any issues or have questions, here are some common troubleshooting steps:
+For common issues or questions:
 
-- Ensure your Ethereum wallet is connected to the correct network.
-- Verify that you have sufficient funds (ETH) for gas fees.
-- Double-check the contract address and parameters used in transactions.
+* Ensure your Solidity compiler is updated to version 0.8.26 or later.
+* Check that your wallet has sufficient ETH for gas fees when deploying and interacting with the contract.
 
-For detailed help, run:
-```
-help
+```bash
+// If the program contains helper info
+solc --help
 ```
 
 ## Authors
 
-Contributors names and contact info:
-
-- Pramod Prajapat
+Pramod Prajapat
+instagram username: pramodprajapat_cse
 
 ## License
 
 This project is licensed under the MIT License - see the LICENSE.md file for details.
 
 ```solidity
-// SPDX-License-Identifier: MIT
 pragma solidity 0.8.26;
 
-contract GamerTokens {
+contract Degen_Gaming{
 
-    address public owner;
+    address public commandCenter;
     
     // Token details
-    string public tokenName = "Degen";
-    string public symbol = "DGN";
-    uint public totalSupply = 0;
-   
-    // Constructor to set the contract deployer as the owner and initialize some rewards
-    constructor() {
-        owner = msg.sender;
-        rewards[0] = Reward("Platinum Shield", 10);
-        rewards[1] = Reward("Magic Wand", 15);
-        rewards[2] = Reward("Player Title", 20);
+    string public TokenName ="Degen";
+    string public Symbol ="DGN";
+    uint public Supply =0;
+    
+    // Initiate a constructor
+    constructor(){
+       commandCenter =msg.sender;
+       Reward[0]=NFT("Emerald Boots",2);
+       Reward[1]=NFT("Emerald Sword",3);
+       Reward[2]=NFT("Identity Change Card",5);
     }
     
-    // Modifier to allow only the owner to perform certain actions
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Only the contract owner can perform this action");
+    // Modifier to allow only owner to mint the tokens
+    modifier ownerOnly() {
+        require(msg.sender == commandCenter, "Command center has rights to mint new token");
         _;
     }
     
-    // Mapping addresses to their token balances and reward structures
-    mapping(address => uint256) private balances;
-    mapping(uint256 => Reward) public rewards;
+    // Mapping the address with their respective balance and NFT with the reward
+    mapping(address => uint256) private balance;
+    mapping(uint256 => NFT) public Reward;
+    mapping(address => string[]) public redeemedItems;
     
-    struct Reward {
+    struct NFT {
         string name;
-        uint256 cost;
+        uint256 price;
     }
 
-    // Functions for minting, transferring, burning tokens, checking balance, and redeeming rewards
-    
-    // Function to mint new tokens, only accessible by the owner
-    function mintTokens(uint256 amount, address to) external onlyOwner {
-        require(amount > 0, "Minting amount must be greater than zero");
-        totalSupply += amount;
-        balances[to] += amount;
+    // Functions to mint, transfer, burn, Check balance and for redeem rewards
+    // For extra functionality, in this smart contract I add require statements.
+
+    function mint(uint amount , address receiver_address) ownerOnly external {
+        require(amount>0,"Minting amount should be greater than 0");
+        Supply=Supply+amount;
+        balance[receiver_address]=balance[receiver_address]+amount;
     }
 
-    // Function to transfer tokens from the sender to another address
-    function transferTokens(uint256 amount, address to) external {
-        require(amount <= balances[msg.sender], "Insufficient balance for transfer");
-        balances[to] += amount;
-        balances[msg.sender] -= amount;
+    function transfer(uint amount, address receiver_address) external{
+        require(amount<=balance[msg.sender],"Amount should be less than the sender's balance");
+        balance[receiver_address] = balance[receiver_address]+amount;
+        balance[msg.sender]=balance[msg.sender]-amount;
     }
 
-    // Function to burn tokens, reducing the sender's balance
-    function burnTokens(uint256 amount) external {
-        require(amount <= balances[msg.sender], "Insufficient balance to burn");
-        balances[msg.sender] -= amount;
-        totalSupply -= amount;
+    function burn(uint amount) external{
+        require(amount<=balance[msg.sender],"Amount should not exceed balance");
+        balance[msg.sender]=balance[msg.sender]-amount;
     }
 
-    // Function to check the token balance of a given address
-    function checkBalance(address account) external view returns (uint256) {
-        return balances[account];
+    function Check_Balance(address user_address) external view returns(uint){
+        return(balance[user_address]);
     }
 
-    // Function to redeem rewards using tokens, reducing the sender's balance
-    function redeemReward(uint256 rewardId) external returns (string memory) {
-        require(rewardId < 3, "Invalid reward ID");
-        require(rewards[rewardId].cost <= balances[msg.sender], "Insufficient balance to redeem reward");
-        balances[msg.sender] -= rewards[rewardId].cost;
-        return rewards[rewardId].name;
+    function redeem(uint reward_ID) external returns (string memory){
+        require(Reward[reward_ID].price <= balance[msg.sender],"Insufficient Balance");
+        if(reward_ID != 0 && reward_ID != 1 && reward_ID != 2){
+            revert("Invalid reward ID");
+        }
+        redeemedItems[msg.sender].push(Reward[reward_ID].name);
+        balance[msg.sender]= balance[msg.sender]-Reward[reward_ID].price;
+        return Reward[reward_ID].name;
+    }
+
+    function getRedeemedItems(address user) external view returns (string[] memory) {
+        return redeemedItems[user];
     }
 }
 ```
